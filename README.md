@@ -1,13 +1,12 @@
 # Reinforcement Learning Solutions
 
 這個專案用來編寫與儲存 Richard S. Sutton 和 Andrew G. Barto 所著
-《Reinforcement Learning: An Introduction》的練習題解答。
+《Reinforcement Learning: An Introduction 2ed》的練習題解答。
 
 ## 專案結構
 
 - `chapter_2/`: 第二章 Multi-armed Bandits 的練習題程式。
 - `notebooks/`: 互動式筆記與實驗記錄。
-- `main.py`: 專案預設入口檔案。
 
 ## 環境需求
 

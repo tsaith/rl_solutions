@@ -4,18 +4,18 @@ from tqdm import tqdm
 from pathlib import Path
 
 # ==========================================
-# 1. 環境與基本參數設定
+# 1. Environment and basic parameter settings
 # ==========================================
 num_arms = 10
-total_steps = 2000 #200000
-measure_steps = 1000  #100000
-num_runs = 2000 #2000  # 書中通常使用 2000 次獨立實驗來取得穩定的平均值
+total_steps = 20000 #200000
+measure_steps = 10000  #100000
+num_runs = 2000 #2000  # The book usually uses 2,000 independent runs for stable averages.
 
-# 參數軸 (2的冪次：1/128, 1/64, ..., 4)
+# Parameter axis (powers of 2: 1/128, 1/64, ..., 4)
 param_pow = np.arange(-7, 3, dtype=float)
 params = 2 ** param_pow
 
-# 初始化用於繪圖的結果字典
+# Initialize the results dictionary for plotting.
 results = {
     'epsilon-greedy (constant alpha=0.1)': [],
     'sample-average epsilon-greedy': [],
@@ -28,73 +28,74 @@ results = {
 output_path = Path(__file__).with_name("2_11.png")
 
 # ==========================================
-# 2. 演算法核心邏輯定義
+# 2. Core algorithm logic
 # ==========================================
 
 def run_bandit(algo_name, param_val):
     """
-    模擬非平穩強盜機環境並計算單一參數設定下的長遠平均回報。
+    Simulate the nonstationary bandit environment and return the long-run average reward.
     """
     rewards_sum = 0.0
     
-    # 為了加速運算，我們可以平行或逐次跑不同的獨立隨機任務
+    # Run independent random tasks sequentially. These could be parallelized for speed.
     for run in range(num_runs):
-        # 初始化環境：非平穩環境，一開始所有臂的 q_star 均為 0
+        # Initialize the environment: all q_star values start at 0 in the nonstationary case.
         q_star = np.zeros(num_arms)
         
-        # 初始化智能體記憶
+        # Initialize agent memory.
         Q = np.zeros(num_arms)
         N = np.zeros(num_arms)
         
-        # 梯度強盜機專用偏好與基線
+        # Preferences and baseline for the gradient bandit algorithm.
         H = np.zeros(num_arms)
         running_avg_reward = 0.0
         
-        # 樂觀初始值專用
+        # Optimistic initialization only.
         if algo_name == 'optimistic initialization (constant alpha=0.1)':
-            Q.fill(param_val)  # 參數值此時代表初始的 Q1
+            Q.fill(param_val)  # The parameter value represents the initial Q1.
             
         run_rewards = 0.0
         
         for step in range(1, total_steps + 1):
-            # --- 動作選擇階段 ---
+            # --- Action selection ---
             if algo_name in ['epsilon-greedy (constant alpha=0.1)', 'sample-average epsilon-greedy']:
-                if np.random.rand() < param_val: # 此時參數代表 epsilon
+                if np.random.rand() < param_val: # The parameter represents epsilon.
                     action = np.random.randint(num_arms)
                 else:
                     action = np.argmax(Q)
                     
             elif algo_name == 'optimistic initialization (constant alpha=0.1)':
-                # 樂觀初始值法在 Figure 2.6 中使用 greedy action selection (epsilon = 0)
+                # Optimistic initialization uses greedy action selection in Figure 2.6 (epsilon = 0).
                 action = np.argmax(Q)
                 
             elif algo_name == 'UCB':
                 if step <= num_arms:
                     action = step - 1
                 else:
-                    # 避免分母為 0
-                    ucb_values = Q + param_val * np.sqrt(np.log(step) / N) # 參數代表 c
+                    # Avoid division by zero.
+                    ucb_values = Q + param_val * np.sqrt(np.log(step) / N) # The parameter represents c.
                     action = np.argmax(ucb_values)
                     
             elif algo_name == 'gradient bandit':
-                # Softmax 分布計算策略
-                exp_H = np.exp(H - np.max(H)) # 減去最大值防止溢位
+                # Compute the policy with a softmax distribution.
+                # Adding or subtracting the same constant from numerator and denominator leaves probabilities unchanged.
+                exp_H = np.exp(H - np.max(H)) # Subtract the maximum value to prevent overflow.
                 probs = exp_H / np.sum(exp_H)
                 action = np.random.choice(num_arms, p=probs)
 
-            # --- 環境與回報反饋 ---
-            # 真實獎勵會加上一個標準差為 1 的隨機高斯雜訊
+            # --- Environment and reward feedback ---
+            # The true reward is perturbed by Gaussian noise with standard deviation 1.
             reward = np.random.normal(q_star[action], 1.0)
             
-            # 關鍵：非平穩環境演進 (Exercise 2.5)
-            # 每一步所有臂的 q_star 都會加上一個獨立的高斯隨機走路雜訊
+            # Key nonstationary environment evolution from Exercise 2.5.
+            # At each step, every arm's q_star receives an independent Gaussian random-walk increment.
             q_star += np.random.normal(0.0, 0.01, num_arms)
             
-            # --- 收集最後 100,000 步的表現 ---
+            # --- Collect performance over the last 100,000 steps ---
             if step > (total_steps - measure_steps):
                 run_rewards += reward
 
-            # --- 智能體學習更新階段 ---
+            # --- Agent learning update ---
             N[action] += 1
             
             if algo_name == 'epsilon-greedy (constant alpha=0.1)' or algo_name == 'optimistic initialization (constant alpha=0.1)':
@@ -104,14 +105,14 @@ def run_bandit(algo_name, param_val):
                 Q[action] += (1.0 / N[action]) * (reward - Q[action])
                 
             elif algo_name == 'UCB':
-                Q[action] += 0.1 * (reward - Q[action]) # UCB在非平穩環境中也通常搭配固定步長
+                Q[action] += 0.1 * (reward - Q[action]) # UCB is also commonly paired with a constant step size in nonstationary environments.
                 
             elif algo_name == 'gradient bandit':
-                # 參數值此時代表學習率 alpha
+                # The parameter value represents the learning rate alpha.
                 alpha = param_val
                 running_avg_reward += (1.0 / step) * (reward - running_avg_reward)
                 
-                # 更新策略偏好
+                # Update action preferences.
                 for a in range(num_arms):
                     if a == action:
                         H[a] += alpha * (reward - running_avg_reward) * (1.0 - probs[a])
@@ -123,22 +124,22 @@ def run_bandit(algo_name, param_val):
     return rewards_sum / num_runs
 
 # ==========================================
-# 3. 執行模擬（參數掃描）
+# 3. Run the simulation (parameter sweep)
 # ==========================================
-print("開始跑非平穩環境下的多演算法參數掃描...")
+print("Starting the multi-algorithm parameter sweep in the nonstationary environment...")
 
 for algo in results.keys():
-    print(f"正在評估演算法: {algo} ...")
+    print(f"Evaluating algorithm: {algo} ...")
     for p in tqdm(params):
         avg_rew = run_bandit(algo, p)
         results[algo].append(avg_rew)
 
 # ==========================================
-# 4. 數據可視化繪圖
+# 4. Data visualization
 # ==========================================
 plt.figure(figsize=(10, 8))
 
-# 定義每條曲線在原書中的對應樣式與顏色
+# Define each curve's style and color to match the book.
 styles = {
     'epsilon-greedy (constant alpha=0.1)': ('red', '-'),
     'sample-average epsilon-greedy': ('red', '--'),
@@ -151,7 +152,7 @@ for algo, data in results.items():
     color, linestyle = styles[algo]
     plt.plot(param_pow, data, label=algo, color=color, linestyle=linestyle, marker='o')
 
-# 設定與書中一致的圖表樣式
+# Configure plot styling to match the book.
 plt.xlabel(r'Parameter ($2^x$: $\epsilon$, $\alpha$, $c$, $Q_0$)', fontsize=12)
 plt.ylabel('Average Reward over last 100,000 steps', fontsize=12)
 plt.title('Exercise 2.11: Parameter Study in Nonstationary Environments', fontsize=14)

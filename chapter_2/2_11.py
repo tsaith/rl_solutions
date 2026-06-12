@@ -10,6 +10,9 @@ num_arms = 10
 total_steps = 20000 #200000
 measure_steps = 10000  #100000
 num_runs = 2000 #2000  # The book usually uses 2,000 independent runs for stable averages.
+random_seed = 0
+
+np.random.seed(random_seed)
 
 # Parameter axis (powers of 2: 1/128, 1/64, ..., 4)
 param_pow = np.arange(-7, 3, dtype=float)
@@ -154,7 +157,7 @@ for algo, data in results.items():
 
 # Configure plot styling to match the book.
 plt.xlabel(r'Parameter ($2^x$: $\epsilon$, $\alpha$, $c$, $Q_0$)', fontsize=12)
-plt.ylabel('Average Reward over last 100,000 steps', fontsize=12)
+plt.ylabel(f'Average Reward over last {measure_steps} steps', fontsize=12)
 plt.title('Exercise 2.11: Parameter Study in Nonstationary Environments', fontsize=14)
 plt.xticks(param_pow, ['1/128', '1/64', '1/32', '1/16', '1/8', '1/4', '1/2', '1', '2', '4'])
 plt.grid(True, linestyle=':', alpha=0.6)

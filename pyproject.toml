@@ -7,5 +7,6 @@ requires-python = ">=3.12"
 dependencies = [
     "jupyterlab>=4.5.7",
     "matplotlib>=3.10.9",
+    "scipy>=1.18.0",
     "tqdm>=4.68.2",
 ]

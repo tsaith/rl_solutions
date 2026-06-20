@@ -139,7 +139,7 @@ def plot_results(
     """Plot and save the average reward curves."""
     steps = np.arange(1, len(sample_average_rewards) + 1)
     if output_path is None:
-        output_path = Path(__file__).with_name("2_4.png")
+        output_path = Path(__file__).with_name("ex2_4.png")
 
     plt.figure(figsize=(9, 5))
     plt.plot(steps, sample_average_rewards, label="Sample average", color="tab:red")

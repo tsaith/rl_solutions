@@ -164,48 +164,44 @@ while True:
                 policy_stable = False
                 
     iteration += 1
-    policy_history.append(policy.copy())
     
     if policy_stable:
         print(f"\nPolicy Iteration converged! Total iterations: {iteration}")
         break
+
+    policy_history.append(policy.copy())
 
 # =============================================================================
 # VISUALIZATION & FILE EXPORT
 # =============================================================================
 print("\nGenerating and exporting figures...")
 
-# --- Figure 1: Replicating the Policy Progression Map Sequence ---
-fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-axes = axes.flatten()
+# --- Replicating the Policy Progression Map Sequence and Final Value Function ---
+fig = plt.figure(figsize=(15, 10))
 
 # Display each policy stage from initialization to optimality
 for idx, p_map in enumerate(policy_history):
-    ax = axes[idx]
-    # Invert origin alignment to match book formatting where y-axis represents Location 1
-    im = ax.imshow(p_map, cmap='bwr', origin='lower', extent=[0, MAX_CARS, 0, MAX_CARS], vmin=-5, vmax=5)
+    ax = fig.add_subplot(2, 3, idx + 1)
     ax.set_title(f"$\\pi_{idx}$", fontsize=14)
     ax.set_xlabel("#Cars at second location")
     ax.set_ylabel("#Cars at first location")
-    
-    # Draw contour lines to highlight decision step thresholds
-    ax.contour(p_map, colors='black', linewidths=0.5, levels=np.arange(-4.5, 5.5, 1), extent=[0, MAX_CARS, 0, MAX_CARS])
+    ax.set_xlim(0, MAX_CARS)
+    ax.set_ylim(0, MAX_CARS)
 
-# Hide the final unused subplot frame to preserve design symmetry
-axes[-1].axis('off')
+    # Draw contour lines to highlight decision thresholds.
+    if np.all(p_map == p_map[0, 0]):
+        ax.text(MAX_CARS / 2, MAX_CARS / 2, f"{p_map[0, 0]}", ha='center', va='center', fontsize=14)
+    else:
+        contours = ax.contour(
+            p_map,
+            colors='black',
+            linewidths=0.5,
+            levels=np.arange(-5, 6),
+            extent=[0, MAX_CARS, 0, MAX_CARS],
+        )
+        ax.clabel(contours, inline=True, fontsize=8, fmt='%d')
 
-# Incorporate an action scale colorbar for directional shifting quantification
-cbar_ax = fig.add_axes([0.72, 0.15, 0.2, 0.03])
-cbar = fig.colorbar(im, cax=cbar_ax, orientation='horizontal')
-cbar.set_label('Action: Cars moved from Loc 1 to Loc 2')
-
-plt.suptitle("Figure 4.2: Sequence of Policies Found by Policy Iteration", fontsize=16, fontweight='bold')
-plt.savefig("jacks_car_rental_policies.png", dpi=300, bbox_inches='tight')
-print("-> Saved policy progression chart as 'jacks_car_rental_policies.png'")
-
-# --- Figure 2: Replicating the 3D Final Optimal State-Value Function Surface ---
-fig_3d = plt.figure(figsize=(10, 8))
-ax_3d = fig_3d.add_subplot(111, projection='3d')
+ax_3d = fig.add_subplot(2, 3, 6, projection='3d')
 
 X = np.arange(num_states)
 Y = np.arange(num_states)
@@ -215,7 +211,8 @@ X, Y = np.meshgrid(X, Y) # X represents location 2, Y represents location 1
 ax_3d.plot_wireframe(X, Y, V, color='black', linewidth=0.6)
 
 # Explicitly match view perspectives and label strings to match the textbook's visual format
-ax_3d.set_title("Optimal Value Function $v_{\\pi_4}$", fontsize=14, pad=20)
+final_policy_idx = len(policy_history) - 1
+ax_3d.set_title(f"$v_{{\\pi_{final_policy_idx}}}$", fontsize=14, pad=20)
 ax_3d.set_xlabel('#Cars at second location', labelpad=10)
 ax_3d.set_ylabel('#Cars at first location', labelpad=10)
 ax_3d.set_zlabel('Value ($)', labelpad=10)
@@ -223,6 +220,8 @@ ax_3d.set_zlabel('Value ($)', labelpad=10)
 # Adjust viewing angle for visual consistency with Figure 4.2
 ax_3d.view_init(elev=30, azim=-125)
 
-plt.savefig("jacks_car_rental_value_function.png", dpi=300, bbox_inches='tight')
-print("-> Saved optimal value function surface as 'jacks_car_rental_value_function.png'")
+plt.suptitle("Figure 4.2: Jack's Car Rental", fontsize=16, fontweight='bold')
+plt.tight_layout()
+plt.savefig("jacks_car_rental_figure_4_2.png", dpi=300, bbox_inches='tight')
+print("-> Saved Figure 4.2 replication as 'jacks_car_rental_figure_4_2.png'")
 print("\nExecution completely finished.")

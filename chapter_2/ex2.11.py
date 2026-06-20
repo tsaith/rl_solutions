@@ -28,7 +28,7 @@ results = {
 }
 
 # Figure output
-output_path = Path(__file__).with_name("ex2_11.png")
+output_path = Path(__file__).with_name("ex2.11.png")
 
 # ==========================================
 # 2. Core algorithm logic

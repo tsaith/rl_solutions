@@ -1,39 +1,47 @@
 # Reinforcement Learning Solutions
 
-這個專案用來編寫與儲存 Richard S. Sutton 和 Andrew G. Barto 所著
-《Reinforcement Learning: An Introduction 2ed》的練習題解答。
+This repository contains Python solutions, experiments, and notes for exercises from
+Richard S. Sutton and Andrew G. Barto's *Reinforcement Learning: An Introduction*
+(2nd edition).
 
-## 專案結構
+## Project Structure
 
-- `chapter_2/`: 第二章 Multi-armed Bandits 的練習題程式。
-- `notebooks/`: 互動式筆記與實驗記錄。
+- `chapter_2/`: Multi-armed bandit exercise programs and generated figures.
+- `chapter_3/`: Notes and chapter-specific scratch work.
+- `chapter_4/`: Dynamic programming examples and exercises, including Jack's Car Rental.
 
-## 環境需求
+## Requirements
 
-本專案使用 Python 3.12 以上版本，並透過 `pyproject.toml` 管理相依套件。
+The project targets Python 3.12 or newer and uses `pyproject.toml` plus `uv.lock` for
+dependency management.
 
-主要套件：
+Main runtime dependencies include:
 
-- `numpy`
-- `matplotlib`
 - `jupyterlab`
+- `matplotlib`
+- `scipy`
+- `tqdm`
 
-如果使用 `uv`，可以直接執行：
+Install the project environment with:
 
 ```bash
 uv sync
 ```
 
-## 執行練習題
+## Running Programs
 
-例如執行第二章練習 2.4：
+Run a script with `uv run python` from the repository root.
+
+Examples:
 
 ```bash
-uv run python chapter_2/2_4.py
+uv run python chapter_2/ex2.4.py
+uv run python chapter_2/ex2.11.py
+uv run python chapter_4/ex4.7.py
 ```
 
-程式會顯示 matplotlib 圖表，並把圖片儲存在同一個資料夾：
+## Notes
 
-```text
-chapter_2/2_4.png
-```
+Some experiments intentionally use reduced step counts or truncated probability
+distributions to keep runtime manageable. Check the constants at the top of each
+script before comparing numerical results with textbook figures.

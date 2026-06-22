@@ -75,7 +75,7 @@ def solve_gambler(p_h, theta=1e-9):
 # =============================================================================
 # VISUALIZATION & EXPORT
 # =============================================================================
-def plot_results(p_h, sweeps_history, V, policy):
+def plot_results(p_h, sweeps_history, policy):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12))
     
     # 1. Plot Value Function Sweeps
@@ -109,7 +109,7 @@ def plot_results(p_h, sweeps_history, V, policy):
 
 # Execute for both problem configurations
 sweeps_25, V_25, policy_25 = solve_gambler(p_h=0.25)
-plot_results(0.25, sweeps_25, V_25, policy_25)
+plot_results(0.25, sweeps_25, policy_25)
 
 sweeps_55, V_55, policy_55 = solve_gambler(p_h=0.55)
-plot_results(0.55, sweeps_55, V_55, policy_55)
+plot_results(0.55, sweeps_55, policy_55)

@@ -129,22 +129,24 @@ def make_trajectory(eps, noise=True):
         next_r = r + next_v
         next_c = c + next_h
 
-        # Check if the path intersects the finish line.
-        # Path is approximated by checking cells from s to next_s.
+        # Check if the path intersects the finish line or hits a boundary.
         max_vel = max(next_h, next_v)
         crossed = False
-        for i in range(max_vel + 1):
+        collided = False
+        for i in range(1, max_vel + 1):
             path_r = min(r + i, next_r)
             path_c = min(c + i, next_c)
             if (path_r, path_c) in fin_cells:
                 crossed = True
                 break
+            if (not (0 <= path_r < rows and 0 <= path_c < cols)) or (track[path_r, path_c] == 1):
+                collided = True
+                break
 
         if crossed:
             break
 
-        # Check boundary collision
-        if (not (0 <= next_r < rows and 0 <= next_c < cols)) or (track[next_r, next_c] == 1):
+        if collided:
             # Collision: reset to start line with zero velocity
             next_start_c = random.choice(start_cols)
             s = (0, next_start_c, 0, 0)
@@ -238,18 +240,22 @@ def generate_best_path():
 
             max_vel = max(next_h, next_v)
             crossed = False
-            for i in range(max_vel + 1):
+            collided = False
+            for i in range(1, max_vel + 1):
                 path_r = min(r + i, next_r)
                 path_c = min(c + i, next_c)
                 if (path_r, path_c) in fin_cells:
                     crossed = True
                     path.append((path_r, path_c, next_h, next_v))
                     break
+                if (not (0 <= path_r < rows and 0 <= path_c < cols)) or (track[path_r, path_c] == 1):
+                    collided = True
+                    break
 
             if crossed:
                 break
 
-            if (not (0 <= next_r < rows and 0 <= next_c < cols)) or (track[next_r, next_c] == 1):
+            if collided:
                 # Boundary hit in deterministic evaluation indicates sub-optimal policy or stuck loop
                 stuck = True
                 break
